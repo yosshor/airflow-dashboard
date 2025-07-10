@@ -21,6 +21,7 @@ const AllDagRuns = () => {
   const [dagData, setDagData] = useState([]); // [{ dagId, runs: [], error }]
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [filter, setFilter] = useState('all'); // 'all', 'withRuns', 'withConf', 'success', 'failed'
 
   useEffect(() => {
     async function fetchAll() {
@@ -49,6 +50,31 @@ const AllDagRuns = () => {
     }
     fetchAll();
   }, []);
+
+  // Filter logic for DAGs and runs
+  const filteredDagData = dagData
+    .map(dag => {
+      let filteredRuns = dag.runs;
+      if (filter === 'withConf') {
+        filteredRuns = dag.runs.filter(run => run.conf && Object.keys(run.conf).length > 0);
+      } else if (filter === 'success') {
+        filteredRuns = dag.runs.filter(run => run.state && run.state.toLowerCase() === 'success');
+      } else if (filter === 'failed') {
+        filteredRuns = dag.runs.filter(run => run.state && run.state.toLowerCase() === 'failed');
+      } else if (filter === 'withRuns') {
+        filteredRuns = dag.runs;
+      }
+      return { ...dag, runs: filteredRuns };
+    })
+    .filter(dag => {
+      if (filter === 'withRuns') {
+        return dag.runs.length > 0;
+      }
+      if (filter === 'withConf' || filter === 'success' || filter === 'failed') {
+        return dag.runs.length > 0;
+      }
+      return true;
+    });
 
   /**
    * Gets the status color for DAG run states
@@ -79,12 +105,61 @@ const AllDagRuns = () => {
           Browse all available DAGs and their execution history
         </p>
 
+        {/* Filter Buttons */}
+        <div style={styles.filterBar}>
+          <button
+            style={{
+              ...styles.filterButton,
+              ...(filter === 'all' && styles.activeFilterButton)
+            }}
+            onClick={() => setFilter('all')}
+          >
+            All
+          </button>
+          <button
+            style={{
+              ...styles.filterButton,
+              ...(filter === 'withRuns' && styles.activeFilterButton)
+            }}
+            onClick={() => setFilter('withRuns')}
+          >
+            With Runs
+          </button>
+          <button
+            style={{
+              ...styles.filterButton,
+              ...(filter === 'withConf' && styles.activeFilterButton)
+            }}
+            onClick={() => setFilter('withConf')}
+          >
+            With Conf
+          </button>
+          <button
+            style={{
+              ...styles.filterButton,
+              ...(filter === 'success' && styles.activeFilterButton)
+            }}
+            onClick={() => setFilter('success')}
+          >
+            Success
+          </button>
+          <button
+            style={{
+              ...styles.filterButton,
+              ...(filter === 'failed' && styles.activeFilterButton)
+            }}
+            onClick={() => setFilter('failed')}
+          >
+            Failed
+          </button>
+        </div>
+
         {loading && <p style={styles.loadingText}>Loading DAGs...</p>}
         {error && <div style={styles.errorMessage}>❌ {error}</div>}
-        {!loading && dagData.length === 0 && <p style={styles.emptyText}>No DAGs found.</p>}
+        {!loading && filteredDagData.length === 0 && <p style={styles.emptyText}>No DAGs found for this filter.</p>}
 
         <div style={styles.dagGrid}>
-          {dagData.map(dag => (
+          {filteredDagData.map(dag => (
             <div key={dag.dagId} style={styles.dagCard}>
               <h2 style={styles.dagTitle}>{dag.dagId}</h2>
               {dag.error && <div style={styles.errorMessage}>❌ Could not load DAG runs.</div>}
@@ -129,6 +204,7 @@ const AllDagRuns = () => {
           <h3 style={styles.helpTitle}>💡 How to use:</h3>
           <ul style={styles.helpList}>
             <li>Browse all DAGs and their execution history</li>
+            <li>Use the filter buttons to quickly find DAGs/runs of interest</li>
             <li>View run status, start/end times, and configuration</li>
             <li>Status badges indicate the state of each run</li>
             <li>Use the search in other pages to filter by DAG</li>
@@ -305,7 +381,32 @@ const styles = {
     color: '#4a5568',
     lineHeight: '1.6',
     paddingLeft: '20px'
-  }
+  },
+  filterBar: {
+    display: 'flex',
+    gap: '12px',
+    margin: '0 auto 32px auto',
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  filterButton: {
+    padding: '8px 20px',
+    fontSize: '1rem',
+    fontWeight: '600',
+    borderRadius: '8px',
+    border: '2px solid #e2e8f0',
+    background: '#f7fafc',
+    color: '#4a5568',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    outline: 'none',
+  },
+  activeFilterButton: {
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    color: 'white',
+    borderColor: '#667eea',
+  },
 };
 
 export default AllDagRuns;
