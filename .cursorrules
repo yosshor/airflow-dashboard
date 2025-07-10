@@ -1,0 +1,152 @@
+# Cursor Rules for Airflow Dashboard Project
+
+## Code Documentation and Clarity Standards
+
+### 1. Function and Component Documentation
+- **ALWAYS** add JSDoc comments for all functions, components, and classes
+- Include parameter descriptions, return types, and usage examples
+- For React components, document props interface and component purpose
+
+```javascript
+/**
+ * Triggers an Airflow DAG with specified configuration
+ * @param {string} dagId - The ID of the DAG to trigger
+ * @param {Object} config - Configuration object for the DAG run
+ * @param {string} config.param1 - First parameter for the DAG
+ * @returns {Promise<Object>} Response object containing dag_run_id
+ * @throws {Error} When API call fails
+ */
+async function triggerDag(dagId, config) {
+  // Implementation
+}
+```
+
+### 2. Component Documentation
+- Document component purpose, props, and state management
+- Include usage examples in comments
+
+```javascript
+/**
+ * AddTask Component
+ * 
+ * Allows users to trigger Airflow DAGs by providing parameters.
+ * Handles form submission and displays success/error messages.
+ * 
+ * @component
+ * @example
+ * <AddTask />
+ */
+export default function AddTask() {
+  // Component implementation
+}
+```
+
+### 3. State and Variable Documentation
+- Document complex state variables and their purpose
+- Explain business logic and data flow
+
+```javascript
+// State for managing DAG trigger form
+const [dagId, setDagId] = useState('test_hello_world'); // Default DAG ID
+const [param1, setParam1] = useState(''); // User input parameter
+const [message, setMessage] = useState(''); // Success/error message display
+```
+
+### 4. API and Service Documentation
+- Document all API endpoints and their purposes
+- Include error handling patterns
+- Document request/response formats
+
+```javascript
+/**
+ * Airflow API Service
+ * 
+ * Handles all communication with the Airflow REST API.
+ * Provides methods for triggering DAGs, fetching runs, and retrieving logs.
+ */
+```
+
+### 5. File Structure Documentation
+- Add file header comments explaining the file's purpose
+- Document imports and dependencies
+
+```javascript
+/**
+ * @fileoverview AddTask component for triggering Airflow DAGs
+ * @author Your Name
+ * @version 1.0.0
+ * @requires react
+ * @requires ../api/airflowApi
+ */
+```
+
+### 6. Error Handling Documentation
+- Document error scenarios and recovery strategies
+- Include user-friendly error messages
+
+```javascript
+try {
+  const result = await triggerDag(dagId, config);
+  setMessage(`Success: DAG triggered with ID ${result.dag_run_id}`);
+} catch (error) {
+  // Handle specific error types
+  if (error.response?.status === 404) {
+    setMessage('Error: DAG not found. Please check the DAG ID.');
+  } else {
+    setMessage('Error: Failed to trigger DAG. Please try again.');
+  }
+}
+```
+
+### 7. Code Organization
+- Group related functions and components
+- Use clear section comments to organize code
+- Maintain consistent indentation and formatting
+
+### 8. Naming Conventions
+- Use descriptive variable and function names
+- Follow camelCase for variables and functions
+- Use PascalCase for components
+- Use UPPER_CASE for constants
+
+### 9. Comments and Inline Documentation
+- Add comments for complex business logic
+- Explain "why" not just "what"
+- Use TODO comments for future improvements
+
+```javascript
+// TODO: Add validation for DAG ID format
+// TODO: Implement retry mechanism for failed API calls
+```
+
+### 10. Testing Documentation
+- Document test cases and their purposes
+- Include setup and teardown instructions
+- Document mock data and fixtures
+
+### 11. Performance Considerations
+- Document performance implications of complex operations
+- Include optimization notes where relevant
+
+### 12. Security Documentation
+- Document security considerations for API calls
+- Include authentication and authorization notes
+- Document data validation requirements
+
+## When Writing Code:
+1. **Always** start with a clear purpose statement
+2. **Always** document the expected inputs and outputs
+3. **Always** include error handling documentation
+4. **Always** explain complex algorithms or business logic
+5. **Always** provide usage examples for reusable components
+6. **Always** maintain consistent documentation style throughout the project
+
+## Code Quality Checklist:
+- [ ] JSDoc comments for all functions/components
+- [ ] Clear variable and function names
+- [ ] Error handling documented
+- [ ] Usage examples provided
+- [ ] File header comments added
+- [ ] Complex logic explained
+- [ ] Performance considerations noted
+- [ ] Security considerations documented 
