@@ -60,7 +60,7 @@ Before running this project, ensure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/yosshor/airflow-dashboard.git
 cd airflow-dashboard
 ```
 
