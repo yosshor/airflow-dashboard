@@ -37,6 +37,7 @@ The Airflow Dashboard provides a user-friendly web interface for interacting wit
 - **All DAGs**: Browse and explore available DAGs
 - **Task Logs**: Access detailed task execution logs
 - **DAG Run Explorer**: Comprehensive DAG run analysis
+- **Log Browser**: Explore, view, and download logs in a collapsible tree grouped by DAG/run/task/attempt
 
 ### Technical Features
 
@@ -166,6 +167,7 @@ The dashboard includes five main sections:
 3. **All DAGs** (`/all-dags`): Browse available DAGs
 4. **Task Logs** (`/logs`): Access task execution logs
 5. **Explore DAG Runs** (`/explorer`): Detailed DAG run analysis
+6. **Log Browser** (`/logs-browser`): Browse, view, and download Airflow logs in a tree view
 
 ### Triggering a DAG
 
@@ -195,7 +197,8 @@ airflow-dashboard/
 │   │   ├── AllDagRuns.js  # DAG listing component
 │   │   ├── DagRunExplorer.js # DAG run analysis
 │   │   ├── ShowTaskLogs.js # Log viewing component
-│   │   └── TaskList.js    # Task list component
+│   │   ├── TaskList.js    # Task list component
+│   │   └── LogBrowser.js  # Log browser tree component
 │   ├── App.js             # Main application component
 │   └── index.js           # Application entry point
 ├── .cursorrules           # Code documentation standards
@@ -248,6 +251,29 @@ The API includes comprehensive error handling:
 - **400**: Invalid request parameters
 - **500**: Server error
 - **Network Errors**: Connection issues
+
+## 📖 Log Browser
+
+The **Log Browser** page provides a modern, collapsible tree view for exploring Airflow logs grouped by DAG, run, task, and attempt. It allows you to:
+
+- Browse all available DAGs and their runs
+- Expand/collapse runs and tasks to see available log attempts
+- Click any log file to view its contents in a styled viewer
+- Download log files with a beautiful, animated button and progress spinner
+- Enjoy a responsive, intuitive UI with Material-UI components
+
+### How to Use
+
+1. Navigate to **Log Browser** from the navigation bar
+2. Expand a DAG, then a run, then a task to see available log attempts
+3. Click a log file (e.g., `attempt=1.log`) to view its contents
+4. Use the download button to save the log file locally
+
+### Technical Notes
+- Uses Airflow REST API endpoints (`/api/v1/dags`, `/dagRuns`, `/taskInstances`, `/logs/...`)
+- Handles both JSON and plain text log responses
+- Shows loading spinners for both tree and downloads
+- Fully documented and follows project code standards
 
 ## 🛠️ Development
 
