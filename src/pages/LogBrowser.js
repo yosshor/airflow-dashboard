@@ -1,8 +1,9 @@
 /**
  * @fileoverview LogBrowser component for exploring and downloading Airflow task logs using the Airflow REST API
  * @author Airflow Dashboard Team
- * @version 1.1.0
+ * @version 1.2.0
  * @requires react
+ * @requires @mui/material
  *
  * This component builds a log tree using the Airflow REST API endpoints:
  * - /api/v1/dags
@@ -11,9 +12,13 @@
  *
  * When a log file is selected, it fetches the log content using:
  * - /api/v1/dags/{dag_id}/dagRuns/{dag_run_id}/taskInstances/{task_id}/logs/{try_number}
+ *
+ * The download button uses Material-UI for a modern look and shows a loading spinner while downloading.
  */
 
 import React, { useEffect, useState } from 'react';
+import CircularProgress from '@mui/material/CircularProgress';
+import DownloadIcon from '@mui/icons-material/Download';
 
 /**
  * LogBrowser Component
@@ -33,6 +38,7 @@ export default function LogBrowser() {
   const [loadingTree, setLoadingTree] = useState(true);
   const [loadingLog, setLoadingLog] = useState(false);
   const [error, setError] = useState('');
+  const [downloading, setDownloading] = useState(false); // Download loading state
 
   // Fetch log tree on mount
   useEffect(() => {
@@ -45,14 +51,12 @@ export default function LogBrowser() {
         if (!dagsRes.ok) throw new Error('Failed to fetch DAGs');
         const dagsData = await dagsRes.json();
         const dags = dagsData.dags || [];
-        console.log('Fetched DAGs:', dags);
 
         // 2. For each DAG, get its runs
         const dagTrees = await Promise.all(
           dags.map(async (dag) => {
             const dag_id = dag.dag_id;
             const url = `/api/v1/dags/${encodeURIComponent(dag_id)}/dagRuns`
-            console.log('Fetching runs for DAG:', url);
             const runsRes = await fetch(url);
             if (!runsRes.ok) {
               console.log(`Failed to fetch runs for DAG ${dag_id}`);
@@ -60,7 +64,6 @@ export default function LogBrowser() {
             }
             const runsData = await runsRes.json();
             const runs = runsData.dag_runs || [];
-            console.log(`Fetched runs for DAG ${dag_id}:`, runs);
 
             // 3. For each run, get its task instances
             const runTrees = await Promise.all(
@@ -73,7 +76,6 @@ export default function LogBrowser() {
                 }
                 const tasksData = await tasksRes.json();
                 const tasks = tasksData.task_instances || [];
-                console.log(`Fetched tasks for DAG ${dag_id}, run ${run_id}:`, tasks);
 
                 // 4. For each task, create an "attempts" array
                 const taskTrees = tasks.map((task) => {
@@ -106,7 +108,6 @@ export default function LogBrowser() {
           })
         );
         setLogTree(dagTrees);
-        console.log('Built logTree:', dagTrees);
       } catch (err) {
         setError(err.message || 'Error loading log tree');
         console.error('Error in fetchLogTree:', err);
@@ -134,7 +135,6 @@ export default function LogBrowser() {
     setLogContent('');
     setLoadingLog(true);
     setError('');
-    console.log('Selected log file:', logFile);
     try {
       const url = `/api/v1/dags/${encodeURIComponent(logFile.dag_id)}/dagRuns/${encodeURIComponent(logFile.run_id)}/taskInstances/${encodeURIComponent(logFile.task_id)}/logs/${logFile.try_number}`;
       const res = await fetch(url);
@@ -152,7 +152,6 @@ export default function LogBrowser() {
         content = text;
       }
       setLogContent(content);
-      console.log('Fetched log content:', content);
     } catch (err) {
       setLogContent('');
       setError(err.message || 'Error loading log file');
@@ -167,18 +166,22 @@ export default function LogBrowser() {
    */
   const handleDownload = () => {
     if (!selectedLog) return;
+    setDownloading(true);
     const url = `/api/v1/dags/${encodeURIComponent(selectedLog.dag_id)}/dagRuns/${encodeURIComponent(selectedLog.run_id)}/taskInstances/${encodeURIComponent(selectedLog.task_id)}/logs/${selectedLog.try_number}`;
-    console.log('Downloading log file:', url);
     fetch(url)
-      .then(res => {
-        return res.json();
-      })
-      .then(data => {
+      .then(res => res.text())
+      .then(text => {
         let content = '';
-        if (Array.isArray(data.content)) {
-          content = data.content.join('\n');
-        } else {
-          content = data.content;
+        try {
+          const data = JSON.parse(text);
+          if (Array.isArray(data.content)) {
+            content = data.content.join('\n');
+          } else {
+            content = data.content;
+          }
+        } catch (jsonErr) {
+          // Not JSON, treat as plain text
+          content = text;
         }
         const blob = new Blob([content], { type: 'text/plain' });
         const link = document.createElement('a');
@@ -187,10 +190,12 @@ export default function LogBrowser() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        console.log('Downloaded log file:', selectedLog.filename);
       })
       .catch(err => {
         console.error('Error in handleDownload:', err);
+      })
+      .finally(() => {
+        setDownloading(false);
       });
   };
 
@@ -276,7 +281,10 @@ export default function LogBrowser() {
         <h1 style={styles.title}>🗂️ Airflow Log Browser</h1>
         <p style={styles.subtitle}>Browse, view, and download Airflow task logs grouped by DAG, run, and task.</p>
         {loadingTree ? (
-          <div style={styles.loading}>Loading log tree...</div>
+          <div style={styles.loadingSpinnerContainer}>
+            <CircularProgress size={40} color="primary" />
+            <div style={styles.loadingText}>Loading log tree...</div>
+          </div>
         ) : error ? (
           <div style={styles.error}>{error}</div>
         ) : (
@@ -289,8 +297,22 @@ export default function LogBrowser() {
           <>
             <div style={styles.viewerHeader}>
               <span style={styles.viewerPath}>{`DAG: ${selectedLog.dag_id} | Run: ${selectedLog.run_id} | Task: ${selectedLog.task_id} | Attempt: ${selectedLog.try_number}`}</span>
-              <button style={styles.downloadButton} onClick={handleDownload}>
-                ⬇️ Download
+              <button
+                style={{
+                  ...styles.downloadButton,
+                  ...(downloading ? styles.downloadButtonLoading : {}),
+                }}
+                onClick={handleDownload}
+                disabled={downloading}
+              >
+                {downloading ? (
+                  <span style={styles.downloadSpinner}><CircularProgress size={22} color="inherit" /></span>
+                ) : (
+                  <>
+                    <DownloadIcon style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                    Download
+                  </>
+                )}
               </button>
             </div>
             <div style={styles.logBox}>
@@ -426,15 +448,32 @@ const styles = {
     wordBreak: 'break-all',
   },
   downloadButton: {
-    background: '#6366f1',
+    background: 'linear-gradient(90deg, #6366f1 0%, #0ea5e9 100%)',
     color: 'white',
     border: 'none',
     borderRadius: '6px',
-    padding: '0.4em 1em',
+    padding: '0.4em 1.5em',
     fontWeight: 'bold',
     cursor: 'pointer',
     fontSize: '1em',
     transition: 'background 0.2s',
+    display: 'flex',
+    alignItems: 'center',
+    minWidth: '120px',
+    justifyContent: 'center',
+    position: 'relative',
+    boxShadow: '0 2px 8px rgba(99,102,241,0.08)',
+  },
+  downloadButtonLoading: {
+    opacity: 0.7,
+    cursor: 'not-allowed',
+  },
+  downloadSpinner: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 24,
+    height: 24,
   },
   logBox: {
     background: '#f1f5f9',
@@ -458,5 +497,18 @@ const styles = {
     fontStyle: 'italic',
     marginTop: '2em',
     textAlign: 'center',
+  },
+  loadingSpinnerContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '200px',
+  },
+  loadingText: {
+    marginTop: '1em',
+    color: '#6366f1',
+    fontWeight: 'bold',
+    fontSize: '1.1em',
   },
 }; 
