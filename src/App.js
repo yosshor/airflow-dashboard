@@ -5,6 +5,7 @@ import TaskList from './pages/TaskList';
 import AllDagRuns from './pages/AllDagRuns';
 import ShowTaskLogs from './pages/ShowTaskLogs';
 import DagRunExplorer from './pages/DagRunExplorer';
+import LogBrowser from './pages/LogBrowser';
 
 function App() {
   return (
@@ -15,7 +16,7 @@ function App() {
         <Link to="/all-dags" style={styles.link}>All DAGs</Link>
         <Link to="/logs" style={styles.link}>Task Logs</Link>
         <Link to="/explorer" style={styles.link}>Explore DAG Runs</Link>
-
+        <Link to="/logs-browser" style={styles.link}>Log Browser</Link>
       </nav>
 
       <Routes>
@@ -24,7 +25,7 @@ function App() {
         <Route path="/all-dags" element={<AllDagRuns />} />
         <Route path="/logs" element={<ShowTaskLogs />} />
         <Route path="/explorer" element={<DagRunExplorer />} />
-
+        <Route path="/logs-browser" element={<LogBrowser />} />
       </Routes>
     </Router>
   );
