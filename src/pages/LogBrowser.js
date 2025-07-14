@@ -217,7 +217,13 @@ export default function LogBrowser() {
               >
                 {expanded[prefix + dag.dag_id] ? '▼' : '▶'}
               </span>
-              <span style={styles.dagName}>{dag.dag_id}</span>
+              <span
+                style={styles.dagName}
+                onClick={() => toggleExpand(prefix + dag.dag_id)}
+                title={expanded[prefix + dag.dag_id] ? 'Collapse' : 'Expand'}
+              >
+                {dag.dag_id}
+              </span>
             </div>
             {expanded[prefix + dag.dag_id] && dag.runs && (
               <ul style={styles.treeList}>
@@ -231,7 +237,13 @@ export default function LogBrowser() {
                       >
                         {expanded[prefix + dag.dag_id + run.run_id] ? '▼' : '▶'}
                       </span>
-                      <span style={styles.runId}>{run.run_id}</span>
+                      <span
+                        style={styles.runId}
+                        onClick={() => toggleExpand(prefix + dag.dag_id + run.run_id)}
+                        title={expanded[prefix + dag.dag_id + run.run_id] ? 'Collapse' : 'Expand'}
+                      >
+                        {run.run_id}
+                      </span>
                     </div>
                     {expanded[prefix + dag.dag_id + run.run_id] && run.tasks && (
                       <ul style={styles.treeList}>
@@ -245,7 +257,13 @@ export default function LogBrowser() {
                               >
                                 {expanded[prefix + dag.dag_id + run.run_id + task.task_id] ? '▼' : '▶'}
                               </span>
-                              <span style={styles.taskId}>{task.task_id}</span>
+                              <span
+                                style={styles.taskId}
+                                onClick={() => toggleExpand(prefix + dag.dag_id + run.run_id + task.task_id)}
+                                title={expanded[prefix + dag.dag_id + run.run_id + task.task_id] ? 'Collapse' : 'Expand'}
+                              >
+                                {task.task_id}
+                              </span>
                             </div>
                             {expanded[prefix + dag.dag_id + run.run_id + task.task_id] && task.attempts && (
                               <ul style={styles.treeList}>
