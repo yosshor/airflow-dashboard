@@ -277,6 +277,74 @@ The **Log Browser** page provides a modern, collapsible tree view for exploring 
 
 ## 🛠️ Development
 
+### Prerequisites
+
+- Node.js (v14 or higher)
+- npm or yarn
+- Airflow instance running on localhost:8080
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the development server: `npm start`
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+### Testing
+
+The project includes comprehensive end-to-end testing using Playwright:
+
+#### Running Tests
+
+```bash
+# Run all tests
+npm run test:e2e
+
+# Run tests with UI mode (interactive)
+npm run test:e2e:ui
+
+# Run tests in headed mode (see browser)
+npm run test:e2e:headed
+
+# Run tests in debug mode
+npm run test:e2e:debug
+
+# View test report
+npm run test:e2e:report
+
+# Install Playwright browsers (first time setup)
+npm run test:e2e:install
+```
+
+#### Test Coverage
+
+The test suite covers:
+
+- **Navigation Tests** (`tests/navigation.spec.js`)
+  - Page navigation and routing
+  - URL handling and direct access
+  - Navigation state persistence
+
+- **Add Task Tests** (`tests/add-task.spec.js`)
+  - Form validation and interactions
+  - API call handling and error scenarios
+  - Loading states and success/error messages
+  - Parameter handling and form reset
+
+- **Log Browser Tests** (`tests/log-browser.spec.js`)
+  - Tree navigation and expansion
+  - Log content viewing and downloading
+  - Loading states and error handling
+  - API interaction mocking
+
+#### Test Configuration
+
+Tests are configured in `playwright.config.js` with:
+- Multiple browser support (Chrome, Firefox, Safari)
+- Mobile device testing
+- Screenshot and video capture on failure
+- Automatic dev server startup
+
 ### Available Scripts
 
 - `npm start`: Start development server
