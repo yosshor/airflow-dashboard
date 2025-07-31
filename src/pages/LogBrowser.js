@@ -19,11 +19,13 @@
 import React, { useEffect, useState } from 'react';
 import CircularProgress from '@mui/material/CircularProgress';
 import DownloadIcon from '@mui/icons-material/Download';
+import SearchIcon from '@mui/icons-material/Search';
 
 /**
  * LogBrowser Component
  *
  * Allows users to browse, view, and download Airflow log files grouped by DAG/run/task.
+ * Includes search functionality to filter DAGs by name.
  *
  * @component
  * @example
@@ -32,6 +34,7 @@ import DownloadIcon from '@mui/icons-material/Download';
 export default function LogBrowser() {
   // State for log tree, selected log, log content, loading, and errors
   const [logTree, setLogTree] = useState([]); // Log tree structure
+  const [filteredLogTree, setFilteredLogTree] = useState([]); // Filtered log tree based on search
   const [expanded, setExpanded] = useState({}); // Collapsed/expanded state
   const [selectedLog, setSelectedLog] = useState(null); // Selected log file object
   const [logContent, setLogContent] = useState(''); // Content of selected log
@@ -39,6 +42,7 @@ export default function LogBrowser() {
   const [loadingLog, setLoadingLog] = useState(false);
   const [error, setError] = useState('');
   const [downloading, setDownloading] = useState(false); // Download loading state
+  const [searchTerm, setSearchTerm] = useState(''); // Search term for filtering DAGs
 
   // Fetch log tree on mount
   useEffect(() => {
@@ -108,6 +112,7 @@ export default function LogBrowser() {
           })
         );
         setLogTree(dagTrees);
+        setFilteredLogTree(dagTrees); // Initially show all DAGs
       } catch (err) {
         setError(err.message || 'Error loading log tree');
         console.error('Error in fetchLogTree:', err);
@@ -117,6 +122,32 @@ export default function LogBrowser() {
     }
     fetchLogTree();
   }, []);
+
+  /**
+   * Filters the log tree based on search term
+   * @param {string} term - Search term to filter DAGs
+   */
+  const filterLogTree = (term) => {
+    if (!term.trim()) {
+      setFilteredLogTree(logTree);
+      return;
+    }
+    
+    const filtered = logTree.filter(dag => 
+      dag.dag_id.toLowerCase().includes(term.toLowerCase())
+    );
+    setFilteredLogTree(filtered);
+  };
+
+  /**
+   * Handles search input changes
+   * @param {Event} e - Input change event
+   */
+  const handleSearchChange = (e) => {
+    const term = e.target.value;
+    setSearchTerm(term);
+    filterLogTree(term);
+  };
 
   /**
    * Handles expanding/collapsing tree nodes
@@ -298,6 +329,26 @@ export default function LogBrowser() {
       <div style={styles.card}>
         <h1 style={styles.title}>🗂️ Airflow Log Browser</h1>
         <p style={styles.subtitle}>Browse, view, and download Airflow task logs grouped by DAG, run, and task.</p>
+        
+        {/* Search Input */}
+        <div style={styles.searchContainer}>
+          <div style={styles.searchInputWrapper}>
+            <SearchIcon style={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="Search DAGs..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              style={styles.searchInput}
+            />
+          </div>
+          {searchTerm && (
+            <div style={styles.searchResults}>
+              Found {filteredLogTree.length} DAG{filteredLogTree.length !== 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
+
         {loadingTree ? (
           <div style={styles.loadingSpinnerContainer}>
             <CircularProgress size={40} color="primary" />
@@ -306,7 +357,15 @@ export default function LogBrowser() {
         ) : error ? (
           <div style={styles.error}>{error}</div>
         ) : (
-          <div style={styles.treeContainer}>{renderTree(logTree)}</div>
+          <div style={styles.treeContainer}>
+            {filteredLogTree.length === 0 && searchTerm ? (
+              <div style={styles.noResults}>
+                No DAGs found matching "{searchTerm}"
+              </div>
+            ) : (
+              renderTree(filteredLogTree)
+            )}
+          </div>
         )}
       </div>
       <div style={styles.viewerCard}>
@@ -349,7 +408,7 @@ export default function LogBrowser() {
   );
 }
 
-// Styles for the LogBrowser component (unchanged)
+// Styles for the LogBrowser component
 const styles = {
   container: {
     display: 'flex',
@@ -380,9 +439,45 @@ const styles = {
     color: '#555',
     marginBottom: '1.5rem',
   },
+  searchContainer: {
+    marginBottom: '1.5rem',
+  },
+  searchInputWrapper: {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+  },
+  searchIcon: {
+    position: 'absolute',
+    left: '12px',
+    color: '#9ca3af',
+    fontSize: '20px',
+  },
+  searchInput: {
+    width: '100%',
+    padding: '12px 12px 12px 40px',
+    border: '2px solid #e5e7eb',
+    borderRadius: '8px',
+    fontSize: '14px',
+    outline: 'none',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+    fontFamily: 'inherit',
+  },
+  searchResults: {
+    marginTop: '8px',
+    fontSize: '12px',
+    color: '#6b7280',
+    fontStyle: 'italic',
+  },
+  noResults: {
+    textAlign: 'center',
+    color: '#6b7280',
+    fontStyle: 'italic',
+    padding: '2rem',
+  },
   treeContainer: {
     overflowY: 'auto',
-    maxHeight: '70vh',
+    maxHeight: '60vh',
     paddingRight: '1rem',
   },
   treeList: {
