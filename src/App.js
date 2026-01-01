@@ -18,7 +18,6 @@ function App() {
         <Link to="/explorer" style={styles.link}>Explore DAG Runs</Link>
         <Link to="/logs-browser" style={styles.link}>Log Browser</Link>
       </nav>
-
       <Routes>
         <Route path="/" element={<AddTask />} />
         <Route path="/tasks" element={<TaskList />} />
